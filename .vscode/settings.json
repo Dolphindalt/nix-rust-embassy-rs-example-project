@@ -1,0 +1,7 @@
+{
+  "rust-analyzer.check.allTargets": false,
+  "rust-analyzer.cargo.target": "thumbv6m-none-eabi",
+  "rust-analyzer.procMacro.enable": true,
+  "rust-analyzer.procMacro.attributes.enable": true,
+  "rust-analyzer.cargo.buildScripts.enable": true
+}

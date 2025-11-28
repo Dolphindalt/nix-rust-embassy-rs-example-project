@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Check flake
+        run: nix flake check
+
+      - name: Build firmware
+        run: nix build
+
+      - name: Check formatting
+        run: nix develop --command cargo fmt --check
+
+      - name: Run clippy
+        run: nix develop --command cargo clippy --target thumbv6m-none-eabi -- -D warnings
+
+      - name: Build documentation
+        run: nix develop --command cargo doc --no-deps --target thumbv6m-none-eabi

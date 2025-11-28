@@ -1,0 +1,37 @@
+[package]
+name = "christmas-rs"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+embassy-stm32 = { version = "0.4.0", features = ["defmt", "stm32l031g6", "unstable-pac", "time-driver-any", "exti", "memory-x"]  }
+embassy-sync = { version = "0.7.2", features = ["defmt"] }
+embassy-executor = { version = "0.9.0", features = ["arch-cortex-m", "executor-thread", "defmt"] }
+embassy-time = { version = "0.5.0", features = ["defmt", "defmt-timestamp-uptime", "tick-hz-32_768"] }
+embassy-usb = { version = "0.5.1", features = ["defmt"] }
+embassy-futures = { version = "0.1.2" }
+
+defmt = "1.0.1"
+defmt-rtt = "1.0.0"
+
+embedded-storage = "0.3.1"
+embedded-io = { version = "0.6.0" }
+embedded-io-async = { version = "0.6.1" }
+
+cortex-m = { version = "0.7.6", features = ["inline-asm", "critical-section-single-core"] }
+cortex-m-rt = "0.7.0"
+panic-probe = { version = "1.0.0", features = ["print-defmt"] }
+heapless = { version = "0.8", default-features = false }
+embedded-hal = "0.2.6"
+static_cell = { version = "2" }
+portable-atomic = { version = "1.5", features = ["unsafe-assume-single-core"] }
+
+[profile.dev]
+opt-level = "s"     # Optimize for size in dev builds too
+
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable link-time optimization
+codegen-units = 1   # Better optimization
+debug = true        # Keep debug info for defmt, but smaller than debug = 2
+strip = false       # Don't strip, we need symbols for debugging
