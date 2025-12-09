@@ -59,14 +59,11 @@ impl FlipFlop {
 
     /// Releases asynchronous reset/preset controls.
     ///
-    /// Sets both CLR_N and PRE_N low to activate them.
-    /// This puts the flip-flop in a known state before normal operation.
-    ///
-    /// Note: With both active, the actual state depends on chip implementation.
-    /// Typically followed by setting data and clocking normally.
+    /// Sets both CLR_N and PRE_N high to deactivate them.
+    /// This allows normal clocked operation where D is latched to Q on CLK rising edge.
     pub fn release_reset(&mut self) {
-        self.fclr_n.set_low();
-        self.fpre_n.set_low();
+        self.fclr_n.set_high();
+        self.fpre_n.set_high();
     }
 
     /// Clocks the flip-flop to set Q output high.
@@ -151,11 +148,23 @@ impl StringController {
 
     /// Resets both LED strings to initial state.
     ///
-    /// Releases reset on both flip-flops and returns state machine to
-    /// default (GreenOff). Should be called during initialization.
+    /// Explicitly clears both flip-flops to Q=LOW (LEDs OFF),
+    /// then releases reset controls for normal operation.
     pub fn reset(&mut self) {
+        #[cfg(feature = "debug-mode")]
+        defmt::info!("Resetting LED strings...");
+
+        // First, release any preset/clear to allow normal operation
         self.red_flop.release_reset();
         self.green_flop.release_reset();
+
+        // Explicitly clock both flip-flops to LOW state (LEDs OFF)
+        self.red_flop.clock_q_low();
+        self.green_flop.clock_q_low();
+
+        #[cfg(feature = "debug-mode")]
+        defmt::info!("Both LED strings initialized to OFF");
+
         self.active_string = ActiveString::default();
     }
 
@@ -174,18 +183,26 @@ impl StringController {
     pub fn activate_next_string(&mut self) {
         self.active_string = match self.active_string {
             ActiveString::GreenOff => {
+                #[cfg(feature = "debug-mode")]
+                defmt::info!("State: GreenOff -> Red (turning red ON)");
                 self.red_flop.clock_q_high();
                 ActiveString::Red
             }
             ActiveString::Red => {
+                #[cfg(feature = "debug-mode")]
+                defmt::info!("State: Red -> RedOff (turning red OFF)");
                 self.red_flop.clock_q_low();
                 ActiveString::RedOff
             }
             ActiveString::RedOff => {
+                #[cfg(feature = "debug-mode")]
+                defmt::info!("State: RedOff -> Green (turning green ON)");
                 self.green_flop.clock_q_high();
                 ActiveString::Green
             }
             ActiveString::Green => {
+                #[cfg(feature = "debug-mode")]
+                defmt::info!("State: Green -> GreenOff (turning green OFF)");
                 self.green_flop.clock_q_low();
                 ActiveString::GreenOff
             }

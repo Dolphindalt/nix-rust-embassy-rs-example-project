@@ -26,6 +26,9 @@ embedded-hal = "0.2.6"
 static_cell = { version = "2" }
 portable-atomic = { version = "1.5", features = ["unsafe-assume-single-core"] }
 
+[features]
+debug-mode = []
+
 [profile.dev]
 opt-level = "s"     # Optimize for size in dev builds too
 

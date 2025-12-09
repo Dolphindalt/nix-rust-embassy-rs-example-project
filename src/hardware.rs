@@ -60,14 +60,14 @@ impl Peripherals {
     /// - PA8 (BACKUP_POWER_N): High (backup battery OFF)
     ///
     /// Red flip-flop (U2):
-    /// - PB6 (FPRE1_N): Low
-    /// - PB5 (FCLR1_N): High
+    /// - PB6 (FPRE1_N): High (preset inactive)
+    /// - PB5 (FCLR1_N): High (clear inactive)
     /// - PA15 (FDATA1): Low
     /// - PB3 (FCLK1): Low
     ///
     /// Green flip-flop (U3):
-    /// - PA4 (FPRE2_N): Low
-    /// - PA5 (FCLR2_N): High
+    /// - PA4 (FPRE2_N): High (preset inactive)
+    /// - PA5 (FCLR2_N): High (clear inactive)
     /// - PA7 (FDATA2): Low
     /// - PB0 (FCLK2): Low
     ///
@@ -86,13 +86,13 @@ impl Peripherals {
             ),
             str_ctrl: StringController::new(
                 FlipFlop::new(
-                    Output::new(p.PB6, Level::Low, Speed::Low),
+                    Output::new(p.PB6, Level::High, Speed::Low),
                     Output::new(p.PB5, Level::High, Speed::Low),
                     Output::new(p.PA15, Level::Low, Speed::Low),
                     Output::new(p.PB3, Level::Low, Speed::Low),
                 ),
                 FlipFlop::new(
-                    Output::new(p.PA4, Level::Low, Speed::Low),
+                    Output::new(p.PA4, Level::High, Speed::Low),
                     Output::new(p.PA5, Level::High, Speed::Low),
                     Output::new(p.PA7, Level::Low, Speed::Low),
                     Output::new(p.PB0, Level::Low, Speed::Low),

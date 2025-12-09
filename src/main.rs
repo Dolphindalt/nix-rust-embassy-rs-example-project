@@ -66,27 +66,31 @@ const LED_CYCLE_SECS: u64 = 3;
 ///
 /// # Clock Settings
 ///
-/// - **MSI**: 66 kHz (ultra-low-power multi-speed internal oscillator)
+/// - **MSI**: 66 kHz in normal mode, 2.097 MHz in debug mode (for reliable debugging)
 /// - **System clock**: MSI (no PLL)
 /// - **LSE**: 32.768 kHz external crystal for RTC
 /// - **Voltage scale**: Range 1 (1.8V core for low power)
 ///
 /// This configuration prioritizes power efficiency over performance,
 /// suitable for battery-powered applications with infrequent wake-ups.
+/// In debug mode, uses higher clock speed to keep debug connection alive.
 ///
 /// # Returns
 ///
 /// Configured RCC settings for embassy-stm32 initialization
 fn create_low_power_config() -> embassy_stm32::rcc::Config {
     embassy_stm32::rcc::Config {
+        #[cfg(feature = "debug-mode")]
+        msi: Some(embassy_stm32::rcc::MSIRange::RANGE2M),
+        #[cfg(not(feature = "debug-mode"))]
         msi: Some(embassy_stm32::rcc::MSIRange::RANGE66K),
         hsi: false,
         hse: None,
         pll: None,
         sys: embassy_stm32::rcc::Sysclk::MSI,
         ahb_pre: embassy_stm32::rcc::AHBPrescaler::DIV1,
-        apb1_pre: embassy_stm32::rcc::APBPrescaler::_RESERVED_1,
-        apb2_pre: embassy_stm32::rcc::APBPrescaler::_RESERVED_2,
+        apb1_pre: embassy_stm32::rcc::APBPrescaler::DIV1,
+        apb2_pre: embassy_stm32::rcc::APBPrescaler::DIV1,
         ls: LsConfig {
             rtc: embassy_stm32::rcc::RtcClockSource::LSE,
             lsi: false,
@@ -130,19 +134,55 @@ async fn main(spawner: Spawner) {
 
     let p = embassy_stm32::init(config);
 
+    #[cfg(feature = "debug-mode")]
+    defmt::info!("Christmas ornament firmware starting...");
+
+    // Wait 3 seconds after boot to allow debugger connection
+    // before entering STOP mode. Negligible battery impact.
+    #[cfg(feature = "debug-mode")]
+    defmt::info!("Waiting 3 seconds for debugger connection...");
+
+    Timer::after_secs(3).await;
+
+    #[cfg(feature = "debug-mode")]
+    defmt::info!("Setting up PVD...");
+
     setup_pvd();
+
+    #[cfg(feature = "debug-mode")]
+    defmt::info!("Initializing peripherals...");
 
     let mut peripherals = Peripherals::new(p);
 
+    #[cfg(feature = "debug-mode")]
+    defmt::info!("Initializing power controller...");
+
     peripherals.pwr_ctrl.init_main_power();
+
+    #[cfg(feature = "debug-mode")]
+    defmt::info!("Resetting LED controllers...");
+
     peripherals.str_ctrl.reset();
+
+    #[cfg(feature = "debug-mode")]
+    defmt::info!("Spawning power monitor task...");
 
     spawner
         .spawn(power_monitor_task(peripherals.pwr_ctrl))
         .unwrap();
 
+    #[cfg(feature = "debug-mode")]
+    defmt::info!("Entering main LED cycle loop...");
+
     loop {
+        #[cfg(feature = "debug-mode")]
+        defmt::info!("Activating next string...");
+
         peripherals.str_ctrl.activate_next_string();
+
+        #[cfg(feature = "debug-mode")]
+        defmt::info!("Sleeping for {} seconds", LED_CYCLE_SECS);
+
         Timer::after_secs(LED_CYCLE_SECS).await;
     }
 }

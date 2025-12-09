@@ -89,10 +89,14 @@ impl PowerController {
         if low_voltage {
             self.state = match &self.state {
                 PowerState::MainPower => {
+                    #[cfg(feature = "debug-mode")]
+                    defmt::warn!("Switching from MAIN battery to BACKUP battery");
                     self.switch_to_backup();
                     PowerState::BackupPower
                 }
                 PowerState::BackupPower => {
+                    #[cfg(feature = "debug-mode")]
+                    defmt::warn!("Switching from BACKUP battery to MAIN battery");
                     self.switch_to_main();
                     PowerState::MainPower
                 }
@@ -144,6 +148,15 @@ fn PVD() {
     // Check if voltage is below or above the threshold
     let voltage_low = pwr.csr().read().pvdo();
 
+    #[cfg(feature = "debug-mode")]
+    {
+        if voltage_low {
+            defmt::warn!("PVD: Voltage dropped below 2.7V threshold!");
+        } else {
+            defmt::info!("PVD: Voltage returned above 2.7V threshold");
+        }
+    }
+
     PVD_SIGNAL.signal(voltage_low);
 }
 
@@ -186,6 +199,17 @@ pub fn setup_pvd() {
     unsafe {
         cortex_m::peripheral::NVIC::unmask(embassy_stm32::interrupt::PVD);
     };
+
+    #[cfg(feature = "debug-mode")]
+    {
+        // Read current voltage status
+        let voltage_low = pwr.csr().read().pvdo();
+        if voltage_low {
+            defmt::warn!("PVD initialized: Current voltage is BELOW 2.7V threshold");
+        } else {
+            defmt::info!("PVD initialized: Current voltage is ABOVE 2.7V threshold");
+        }
+    }
 }
 
 /// Async task for monitoring power and handling battery switching.
@@ -205,8 +229,18 @@ pub fn setup_pvd() {
 /// ```
 #[embassy_executor::task]
 pub async fn power_monitor_task(mut pwr_ctrl: PowerController) {
+    #[cfg(feature = "debug-mode")]
+    defmt::info!("Power monitor task started, waiting for PVD events...");
+
     loop {
         let voltage_low = PVD_SIGNAL.wait().await;
+
+        #[cfg(feature = "debug-mode")]
+        defmt::info!(
+            "Power monitor received PVD signal: voltage_low={}",
+            voltage_low
+        );
+
         pwr_ctrl.power_transition(voltage_low);
     }
 }
