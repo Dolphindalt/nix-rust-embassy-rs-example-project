@@ -87,6 +87,18 @@ echo "use flake" > .envrc
 direnv allow
 ```
 
+## Debug Mode
+
+The firmware includes a `debug-mode` feature that enables detailed logging over RTT and uses a faster clock (2 MHz) to maintain a stable debug connection.
+
+To build and run with debug mode:
+
+```bash
+cargo run --release --features debug-mode
+```
+
+Debug mode provides detailed logs for initialization, LED state transitions, PVD events, and battery switching.
+
 ## Using Nix with Embedded Rust
 
 This project demonstrates a complete Nix flake setup for embedded Rust development. The key components:
