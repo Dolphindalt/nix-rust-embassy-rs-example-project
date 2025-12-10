@@ -178,8 +178,7 @@ impl StringController {
     /// Green    → GreenOff (turn green OFF)
     /// ```
     ///
-    /// Call this periodically (e.g., every 3 seconds) to create the
-    /// alternating red/green display pattern.
+    /// Call this periodically to create the alternating red/green display pattern.
     pub fn activate_next_string(&mut self) {
         self.active_string = match self.active_string {
             ActiveString::GreenOff => {

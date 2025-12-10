@@ -6,7 +6,7 @@ This project also serves as an example of using Nix flakes with embedded Rust an
 
 ## Hardware
 
-The ornament uses an ultra-low-power STM32L031 MCU running from two coin cell batteries with automatic failover. The MCU controls 6 LEDs (3 red, 3 green) via D flip-flops, alternating between red and green patterns every 3 seconds. The system spends most of its time in STOP mode, waking only when the RTC timer expires or when the battery voltage drops below threshold.
+The ornament uses an ultra-low-power STM32L031 MCU running from two coin cell batteries with automatic failover. The MCU controls 6 LEDs (3 red, 3 green) via D flip-flops, alternating between red and green patterns. The system spends most of its time in STOP mode, waking only when the RTC timer expires or when the battery voltage drops below threshold.
 
 - **MCU**: STM32L031G6U6S (Cortex-M0+)
 - **Power**: Dual coin cells with MIC94050 load switches
@@ -26,7 +26,7 @@ The PVD is connected to EXTI line 16, which can wake the MCU from STOP mode. Thi
 
 ### LED Control
 
-Rather than driving the LEDs directly from the MCU, the design uses D flip-flops to maintain LED state while the MCU is in STOP mode. The MCU wakes every 3 seconds, clocks new data into the flip-flops, and immediately returns to sleep. The flip-flops continue driving the LEDs with no further MCU involvement.
+Rather than driving the LEDs directly from the MCU, the design uses D flip-flops to maintain LED state while the MCU is in STOP mode. The MCU wakes periodically, clocks new data into the flip-flops, and immediately returns to sleep. The flip-flops continue driving the LEDs with no further MCU involvement.
 
 This approach dramatically reduces power consumption compared to keeping the MCU awake for LED control.
 
@@ -36,7 +36,7 @@ The firmware configures the MSI oscillator at 66 kHz and relies on Embassy's asy
 
 Typical power profile:
 - STOP mode: ~1µA (MCU) + ~510µA (LEDs when on)
-- Active time: ~1ms every 3 seconds
+- Active time: ~1ms per LED update cycle
 
 ## Building and Flashing
 

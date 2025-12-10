@@ -60,7 +60,7 @@ use power::{power_monitor_task, setup_pvd};
 ///
 /// The LED strings alternate between red and green at this interval.
 /// Each string is ON for this duration, then OFF for this duration.
-const LED_CYCLE_SECS: u64 = 3;
+const LED_CYCLE_SECS: u64 = 1;
 
 /// Creates a low-power clock configuration for STM32L031.
 ///
@@ -118,7 +118,7 @@ fn create_low_power_config() -> embassy_stm32::rcc::Config {
 ///
 /// # Main Loop
 ///
-/// The main loop cycles through LED states every 3 seconds:
+/// The main loop cycles through LED states at intervals defined by LED_CYCLE_SECS:
 /// - GreenOff → Red ON → Red OFF → Green ON → (repeat)
 ///
 /// Between state changes, the MCU enters STOP mode automatically,
